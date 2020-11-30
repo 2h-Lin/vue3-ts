@@ -25,7 +25,7 @@
           class="list-item"
           @mouseenter="mouseEnter(item)"
           @mouseleave="mouseLeave(item)"
-          v-for="item in filterTodoList"
+          v-for="(item,index) in filterTodoList"
           :key="item.id"
         >
           <div v-show="!item.isEdit" class="list-item-box">
