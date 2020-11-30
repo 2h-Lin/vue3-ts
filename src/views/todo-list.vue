@@ -2,16 +2,24 @@
   <div class="todo-list">
     <h1>todos</h1>
     <div class="todo-list-content">
+      <section class="content-input-box">
+        <input
+          class="todo-input"
+          type="text"
+          autofocus
+          autocomplete="off"
+          placeholder="What needs to be done?"
+          v-model="inputValue"
+          @keyup.enter="handleAddTodo($event.target)"
+        />
+      </section>
       <input
-        class="todo-input"
-        type="text"
-        autofocus
-        autocomplete="off"
-        placeholder="What needs to be done?"
-        v-model="inputValue"
-        @keyup.enter="handleAddTodo($event.target)"
+        v-show="todoList.length"
+        type="checkbox"
+        v-model="isSelectAll"
+        class="toggle-all"
+        :class="{'toggle-all-active': isSelectAll }"
       />
-
       <ul class="content" v-show="filterTodoList.length">
         <li
           class="list-item"
@@ -51,11 +59,18 @@
           />
         </li>
       </ul>
-      
+
       <section class="footer" v-show="todoList.length">
         <span>{{ isActiveTodos.length }} items left</span>
         <div class="status-buttons">
-          <button :class="{'active-status-button': status === button}" v-for="(button,index) in statusButtons" @click="handleChange(button)" :key="index">{{button}}</button>
+          <button
+            :class="{ 'active-status-button': status === button }"
+            v-for="(button, index) in statusButtons"
+            @click="handleChange(button)"
+            :key="index"
+          >
+            {{ button }}
+          </button>
         </div>
         <p
           v-show="isCompletedTodos.length"
@@ -89,7 +104,7 @@ export default {
       todoId: 0,
       currentTodoId: 0,
       status: "All",
-      statusButtons: ['All','Active','Completed']
+      statusButtons: ["All", "Active", "Completed"],
     });
     // 自动获取input焦点
     // 因为在循环里，所以要定义一个ref数组，然后根据id来获取当前input的焦点
@@ -113,7 +128,7 @@ export default {
     //     immediate: true
     //   }
     // );
-    
+
     //vue3.0去除了filter过滤器，官方建议用计算属性或方法代替过滤器。
     const filterTodoList = computed(() => {
       switch (state.status) {
@@ -134,13 +149,20 @@ export default {
     const isCompletedTodos = computed(() =>
       state.todoList.filter((item) => item.isCompleted)
     );
-
+    const isSelectAll = computed({
+      get: () => isActiveTodos.value.length === 0 && !!state.todoList.length,
+      set: (val) => {
+        state.todoList.forEach((todo) => {
+          todo.isCompleted = val;
+        });
+      },
+    });
     // 添加todo
     const handleAddTodo = (e) => {
       //如果输入内容为空则立即返回
       if (e.value === "") {
         return;
-      } 
+      }
       state.todoList.push({
         id: state.todoId++,
         content: state.inputValue,
@@ -201,6 +223,7 @@ export default {
       isCompletedTodos,
       handleChange,
       filterTodoList,
+      isSelectAll,
     };
   },
 };
@@ -239,8 +262,31 @@ h1 {
 }
 /* content部分样式 */
 .todo-list .todo-list-content {
+  position: relative;
   width: 600px;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 25px 50px 0 rgba(0, 0, 0, 0.1);
+}
+.todo-list-content .content-input-box {
+  display: flex;
+  align-items: center;
+  box-shadow: inset 0 -2px 1px rgba(0, 0, 0, 0.03);
+}
+.toggle-all {
+  position: absolute;
+  left: 42px;
+  top: 27px;
+  width: 0px;
+  height: 0px;
+  transform: rotate(90deg);
+  cursor: pointer;
+}
+.toggle-all:before {
+  content: "❯";
+  font-size: 22px;
+  color: #e6e6e6;
+}
+.toggle-all-active:before {
+  color: #737373;
 }
 .todo-list-content .todo-input {
   font-size: 24px;
@@ -248,7 +294,6 @@ h1 {
   padding: 16px 16px 16px 60px;
   border: 1px solid transparent;
   background: rgba(0, 0, 0, 0.003);
-  box-shadow: inset 0 -2px 1px rgba(0, 0, 0, 0.03);
 }
 .content .list-item {
   width: 100%;
@@ -305,7 +350,6 @@ h1 {
 .footer .status-buttons button {
   padding: 2px 8px;
   margin-left: 5px;
-  
 }
 .footer .clear-button {
   cursor: pointer;
